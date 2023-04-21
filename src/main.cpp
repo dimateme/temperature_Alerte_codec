@@ -10,6 +10,9 @@
 #define DHTTYPE DHT22
 TemperatureStub *myTemp;
 
+// Definition du led
+
+const int GPIO_LED = 14; // GPIO14
 // Variable pour la connection Wifi
 /*const char *SSID = "EcoleDuWeb2.4g";
 const char *PASSWORD = "EcoleDuWEB";
@@ -26,20 +29,39 @@ const char MQTT_SERVER[] = "10.0.0.135";
 const uint16_t MQTT_PORT = 1883;
 const char MQTT_CLIENT[] = "ESP32_MQTT";
 
-const char TOPIC_SUB[] = "topic_sub";
+const char TOPIC_SUB[] = "etat_temp";
 const char TOPIC_PUB[] = "esp32/temperature";
 
 char bufferTemperature[100]; // le buffer permet de stocker la valeur de la température et de la convertir en string
 float temperature = 0.0f;    // la température du sensor dht22
 float temperaturePrecedente = 0.0f;
+char bufferEtat[100]; // le buffer permet de stocker la valeur de la température et de la convertir en string
+int valeurEtat = 0;
+char *p;
 
 void messageHandler(char *topic, uint8_t *payload, unsigned int len)
 {
   Serial.print(topic);
-  Serial.print(" with value: ");
+  Serial.print(" etat de la temperature: ");
   for (uint16_t i = 0; i < len; ++i)
-    Serial.print((char)payload[i]);
+    valeurEtat = (char)payload[i] - '0';
+  Serial.println(valeurEtat);
+
   Serial.println();
+  if (valeurEtat == 1)
+  {
+    digitalWrite(GPIO_LED, HIGH);
+  }
+  else if (valeurEtat == 2)
+  {
+    /*si la température est basse*/
+    digitalWrite(GPIO_LED, LOW);
+  }
+  else if (valeurEtat == 0)
+  {
+    /*si la température est normale*/
+    digitalWrite(GPIO_LED, LOW);
+  }
 }
 
 void mqttPubSub(void)
@@ -115,6 +137,9 @@ void setup()
   Serial.println(); // connection est établie
   Serial.print("Connected to WiFi with IP ");
   Serial.println(WiFi.localIP());
+
+  // Initialisation de led
+  pinMode(GPIO_LED, OUTPUT);
   // Gestion de la temperature
   myTemp = new TemperatureStub();
   myTemp->init(DHTPIN, DHT22);
@@ -125,4 +150,5 @@ void setup()
 void loop()
 {
   mqttPubSub();
+  Serial.println("Fin du programme");
 }
